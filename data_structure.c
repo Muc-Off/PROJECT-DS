@@ -126,7 +126,6 @@ void display_all_stalls(struct stall *head)
         printf("  ID: %d\n", v->stall_id);
         printf("  Name: %s\n", v->stall_name);
         printf("  Contact: %s\n", v->contact_number);
-        printf("---\n");
         v = v->next;
     }
     printf("Total stalls: %d\n\n\n", count);
@@ -244,20 +243,6 @@ struct item *search_item_by_name(struct item *head, char *item_name)
     return NULL;
 }
 
-struct item *search_item(struct item *head, int item_id)
-{
-    struct item *it = head;
-    while (it != NULL)
-    {
-        if (it->item_id == item_id)
-        {
-            return it;
-        }
-        it = it->next;
-    }
-    return NULL;
-}
-
 void display_items_by_stall(struct item *head, int stall_id)
 {
     if (head == NULL)
@@ -295,20 +280,6 @@ void display_items_by_stall(struct item *head, int stall_id)
     printf("\n\n");
 }
 
-char* get_stall_name_by_id(struct stall *head, int stall_id)
-{
-    struct stall *current = head;
-    while (current != NULL)
-    {
-        if (current->stall_id == stall_id)
-        {
-            return current->stall_name;
-        }
-        current = current->next;
-    }
-    return "Unknown Stall";
-}
-
 void display_all_items(struct item *head, struct stall *stall_head)
 {
     if (head == NULL)
@@ -325,8 +296,19 @@ void display_all_items(struct item *head, struct stall *stall_head)
     while (it != NULL)
     {
         count++;
+        struct stall *stall_ptr = stall_head;
+        char *stall_name = "Unknown Stall";
+        while (stall_ptr != NULL)
+        {
+            if (stall_ptr->stall_id == it->stall_id)
+            {
+                stall_name = stall_ptr->stall_name;
+                break;
+            }
+            stall_ptr = stall_ptr->next;
+        }
         printf("Item #%d\n", count);
-        printf("  ID: %d | Stall: %s\n", it->item_id, get_stall_name_by_id(stall_head, it->stall_id));
+        printf("  ID: %d | Stall: %s\n", it->item_id, stall_name);
         printf("  Name: %s\n", it->item_name);
         printf("  Unit Price: BDT%.2f\n", it->price);
         printf("  Quantity: %d\n", it->quantity_available);
@@ -341,7 +323,16 @@ void display_all_items(struct item *head, struct stall *stall_head)
 
 void update_item_quantity(struct item *head, int item_id, int new_quantity)
 {
-    struct item *it = search_item(head, item_id);
+    struct item *it = head;
+    while (it != NULL)
+    {
+        if (it->item_id == item_id)
+        {
+            break;
+        }
+        it = it->next;
+    }
+
     if (it == NULL)
     {
         printf("not found.\n");

@@ -29,8 +29,7 @@ void admin_menu()
         printf("1. Add Stall\n");
         printf("2. View All Stalls\n");
         printf("3. View All Items\n");
-        printf("4. View All Customers\n");
-        printf("5. Back to Main Menu\n");
+        printf("4. Back to Main Menu\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
         flush_input_buffer();
@@ -55,13 +54,9 @@ void admin_menu()
         }
         else if (choice == 3)
         {
-            display_all_items(items);
+            display_all_items(items, stalls);
         }
         else if (choice == 4)
-        {
-            display_all_customers(customers);
-        }
-        else if (choice == 5)
         {
             return;
         }
@@ -144,22 +139,21 @@ void customer_menu()
     customer_id[strcspn(customer_id, "\n")] = 0;
     flush_input_buffer();
 
-    struct customer *c = search_customer(customers, customer_id);
-    if (c == NULL)
+    char name[100], contact[12];
+    printf("Enter your name: ");
+    fgets(name, sizeof(name), stdin);
+    name[strcspn(name, "\n")] = 0;
+
+    printf("Enter contact: ");
+    fgets(contact, sizeof(contact), stdin);
+    contact[strcspn(contact, "\n")] = 0;
+    flush_input_buffer();
+
+    add_customer(&customers, customer_id, name, contact);
+    struct customer *c = customers;
+    while (c != NULL && strcmp(c->customer_id, customer_id) != 0)
     {
-        char name[100], contact[12];
-        printf("New customer.\nEnter your name: ");
-        fgets(name, sizeof(name), stdin);
-        name[strcspn(name, "\n")] = 0;
-        flush_input_buffer();
-
-        printf("Enter contact: ");
-        fgets(contact, sizeof(contact), stdin);
-        contact[strcspn(contact, "\n")] = 0;
-        flush_input_buffer();
-
-        add_customer(&customers, customer_id, name, contact);
-        c = search_customer(customers, customer_id);
+        c = c->next;
     }
 
     while (1)
@@ -208,14 +202,12 @@ void customer_menu()
                 continue;
             }
 
-            printf("Enter item ID to add (0 to skip): ");
-            scanf("%d", &item_id);
-            flush_input_buffer();
+            printf("Enter item name to add: ");
+            char item_name[100];
+            fgets(item_name, sizeof(item_name), stdin);
+            item_name[strcspn(item_name, "\n")] = 0;
 
-            if (item_id == 0)
-                continue;
-
-            struct item *item = search_item(items, item_id);
+            struct item *item = search_item_by_name(items, item_name);
             if (item == NULL || item->stall_id != v->stall_id)
             {
                 printf("Invalid item.\n");
@@ -228,7 +220,7 @@ void customer_menu()
 
             if (quantity > 0 && quantity <= item->quantity_available)
             {
-                add_to_cart(&carts, cart_id_counter++, customer_id, item_id, quantity, item->price);
+                add_to_cart(&carts, cart_id_counter++, customer_id, item->item_id, quantity, item->price);
                 item->quantity_available -= quantity;
                 printf("Added to cart.\n");
             }

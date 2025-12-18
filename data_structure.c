@@ -88,18 +88,6 @@ void delete_stall(struct stall **head, int stall_id)
     free(current);
 }
 
-struct stall *search_stall(struct stall *head, int stall_id)
-{
-    for (struct stall *current = head; current != NULL; current = current->next)
-    {
-        if (current->stall_id == stall_id)
-        {
-            return current;
-        }
-    }
-    return NULL;
-}
-
 struct stall *search_stall_by_name(struct stall *head, char *stall_name)
 {
     if (stall_name == NULL)
@@ -107,12 +95,14 @@ struct stall *search_stall_by_name(struct stall *head, char *stall_name)
         return NULL;
     }
 
-    for (struct stall *current = head; current != NULL; current = current->next)
+    struct stall *current = head;
+    while (current != NULL)
     {
         if (strcmp(current->stall_name, stall_name) == 0)
         {
             return current;
         }
+        current = current->next;
     }
     return NULL;
 }
@@ -128,7 +118,8 @@ void display_all_stalls(struct stall *head)
     printf("\n");
     printf(" STALL DATABASE \n");
     int count = 0;
-    for (struct stall *v = head; v != NULL; v = v->next)
+    struct stall *v = head;
+    while (v != NULL)
     {
         count++;
         printf("Entry #%d\n", count);
@@ -136,6 +127,7 @@ void display_all_stalls(struct stall *head)
         printf("  Name: %s\n", v->stall_name);
         printf("  Contact: %s\n", v->contact_number);
         printf("---\n");
+        v = v->next;
     }
     printf("Total stalls: %d\n\n\n", count);
 }
@@ -233,14 +225,35 @@ void delete_item(struct item **head, int item_id)
     free(current);
 }
 
+struct item *search_item_by_name(struct item *head, char *item_name)
+{
+    if (item_name == NULL)
+    {
+        return NULL;
+    }
+
+    struct item *it = head;
+    while (it != NULL)
+    {
+        if (strcmp(it->item_name, item_name) == 0)
+        {
+            return it;
+        }
+        it = it->next;
+    }
+    return NULL;
+}
+
 struct item *search_item(struct item *head, int item_id)
 {
-    for (struct item *it = head; it != NULL; it = it->next)
+    struct item *it = head;
+    while (it != NULL)
     {
         if (it->item_id == item_id)
         {
             return it;
         }
+        it = it->next;
     }
     return NULL;
 }
@@ -256,7 +269,8 @@ void display_items_by_stall(struct item *head, int stall_id)
     printf("\n STALL %d INVENTORY \n", stall_id);
     int count = 0;
 
-    for (struct item *it = head; it != NULL; it = it->next)
+    struct item *it = head;
+    while (it != NULL)
     {
         if (it->stall_id == stall_id)
         {
@@ -264,9 +278,10 @@ void display_items_by_stall(struct item *head, int stall_id)
             printf("Item #%d\n", count);
             printf("  ID: %d\n", it->item_id);
             printf("  Product: %s\n", it->item_name);
-            printf("  Price: $%.2f\n", it->price);
+            printf("  Price: %.2f BDT.\n", it->price);
             printf("  In Stock: %d units\n\n", it->quantity_available);
         }
+        it = it->next;
     }
 
     if (count == 0)
@@ -280,7 +295,21 @@ void display_items_by_stall(struct item *head, int stall_id)
     printf("\n\n");
 }
 
-void display_all_items(struct item *head)
+char* get_stall_name_by_id(struct stall *head, int stall_id)
+{
+    struct stall *current = head;
+    while (current != NULL)
+    {
+        if (current->stall_id == stall_id)
+        {
+            return current->stall_name;
+        }
+        current = current->next;
+    }
+    return "Unknown Stall";
+}
+
+void display_all_items(struct item *head, struct stall *stall_head)
 {
     if (head == NULL)
     {
@@ -292,20 +321,22 @@ void display_all_items(struct item *head)
     int count = 0;
     float total_value = 0;
 
-    for (struct item *it = head; it != NULL; it = it->next)
+    struct item *it = head;
+    while (it != NULL)
     {
         count++;
         printf("Item #%d\n", count);
-        printf("  ID: %d | stall: %d\n", it->item_id, it->stall_id);
+        printf("  ID: %d | Stall: %s\n", it->item_id, get_stall_name_by_id(stall_head, it->stall_id));
         printf("  Name: %s\n", it->item_name);
-        printf("  Unit Price: $%.2f\n", it->price);
+        printf("  Unit Price: BDT%.2f\n", it->price);
         printf("  Quantity: %d\n", it->quantity_available);
         total_value += it->price * it->quantity_available;
         printf("\n");
+        it = it->next;
     }
 
     printf("Total items in inventory: %d\n", count);
-    printf("Total inventory value: $%.2f\n\n\n", total_value);
+    printf("Total inventory value: %.2f BDT.\n", total_value);
 }
 
 void update_item_quantity(struct item *head, int item_id, int new_quantity)
@@ -425,47 +456,6 @@ void delete_customer(struct customer **head, char *customer_id)
     free(current);
 }
 
-struct customer *search_customer(struct customer *head, char *customer_id)
-{
-    if (customer_id == NULL)
-    {
-        return NULL;
-    }
-
-    for (struct customer *customer = head; customer != NULL; customer = customer->next)
-    {
-        if (strcmp(customer->customer_id, customer_id) == 0)
-        {
-            return customer;
-        }
-    }
-    return NULL;
-}
-
-void display_all_customers(struct customer *head)
-{
-    if (head == NULL)
-    {
-        printf("No customers registered\n");
-        return;
-    }
-
-    printf("\n CUSTOMER DATABASE \n");
-    int count = 0;
-
-    for (struct customer *customer = head; customer != NULL; customer = customer->next)
-    {
-        count++;
-        printf("Customer #%d\n", count);
-        printf("  ID: %s\n", customer->customer_id);
-        printf("  Name: %s\n", customer->customer_name);
-        printf("  Contact: %s\n", customer->contact_number);
-        printf("---\n");
-    }
-
-    printf("Total customers: %d\n\n\n", count);
-}
-
 void free_all_customers(struct customer *head)
 {
     struct customer *current = head;
@@ -576,17 +566,19 @@ void display_cart(struct cart *head, char *customer_id)
     int item_count = 0;
     float total = 0.0;
 
-    for (struct cart *entry = head; entry != NULL; entry = entry->next)
+    struct cart *entry = head;
+    while (entry != NULL)
     {
         if (strcmp(entry->customer_id, customer_id) == 0)
         {
             item_count++;
             float subtotal = entry->quantity * entry->item_price;
             printf("Cart Entry #%d\n", entry->cart_id);
-            printf("  Item ID: %d\n", entry->item_id);
-            printf("  Qty: %d @ $%.2f = $%.2f\n", entry->quantity, entry->item_price, subtotal);
+            printf(" Item ID: %d\n", entry->item_id);
+            printf(" Qty: %d Pcs.\nUnit Price = %.2f BDT.\n Total = %.2f BDT.\n", entry->quantity, entry->item_price, subtotal);
             total += subtotal;
         }
+        entry = entry->next;
     }
 
     if (item_count == 0)
@@ -596,7 +588,7 @@ void display_cart(struct cart *head, char *customer_id)
     else
     {
         printf("\nItems in cart: %d\n", item_count);
-        printf("Total: $%.2f\n", total);
+        printf("Total: %.2f BDT.\n", total);
     }
     printf("\n\n");
 }
@@ -607,42 +599,16 @@ float calculate_cart_total(struct cart *head, char *customer_id)
         return 0.0;
 
     float total = 0.0;
-    for (struct cart *entry = head; entry != NULL; entry = entry->next)
+    struct cart *entry = head;
+    while (entry != NULL)
     {
         if (strcmp(entry->customer_id, customer_id) == 0)
         {
             total += entry->quantity * entry->item_price;
         }
+        entry = entry->next;
     }
     return total;
-}
-
-void display_all_cart(struct cart *head)
-{
-    if (head == NULL)
-    {
-        printf("No items in any cart\n");
-        return;
-    }
-
-    printf("\n ALL SHOPPING CARTS \n");
-    int count = 0;
-    float grand_total = 0;
-
-    for (struct cart *entry = head; entry != NULL; entry = entry->next)
-    {
-        count++;
-        float line_total = entry->quantity * entry->item_price;
-        printf("Cart Entry #%d\n", count);
-        printf("  Cart ID: %d\n", entry->cart_id);
-        printf("  Customer: %s\n", entry->customer_id);
-        printf("  Item ID: %d\n", entry->item_id);
-        printf("  Qty: %d @ $%.2f = $%.2f\n\n", entry->quantity, entry->item_price, line_total);
-        grand_total += line_total;
-    }
-
-    printf("Total line items: %d\n", count);
-    printf("Grand total: $%.2f\n\n\n", grand_total);
 }
 
 void free_all_cart(struct cart *head)
